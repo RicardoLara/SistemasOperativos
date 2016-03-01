@@ -28,6 +28,7 @@ void creaHijo(int nivel, int hijo, int cont){
 					for(k=0;k<n;k++) printf("\t"); printf("+---------------------------------------+\n");
 					for(k=0;k<n;k++) printf("\t"); printf("| Nivel: %d | Mi PID: %d | Padre: %d |\n",n+1,getpid(),getppid());
 					}
+					if(n==1) {for(k=0;k<n;k++) printf("\t"); printf("+---------------------------------------+\n");}
 					for(k=0;k<n;k++) printf("\t"); printf("| Creando %d hijos...                    |\n",hijo);
 					for(k=0;k<n;k++) printf("\t"); printf("+---------------------------------------+\n");
 				}
