@@ -7,23 +7,7 @@ char archivos[5][50];
 
 void * buscaCosas(void * p){
 	int * cual = (int *)p;
-	switch(*cual){
-		case 0: 
-			//Cuenta 
-		break;
-		case 1: 
-			//Cuenta 
-		break;
-		case 2: 
-			//Cuenta 
-		break;
-		case 3: 
-			//Cuenta 
-		break;
-		case 4: 
-			//Cuenta 
-		break;
-	}
+	//Buscar cosas en archivos[*cual]
 }
 
 int main(int argc, char ** argv){
