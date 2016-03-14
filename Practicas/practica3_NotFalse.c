@@ -4,11 +4,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-// contar - genera resultados aleatorios de las palabras
-int seed; // Solo necesario para funcion contar
-int contar(){
-	srand(seed++);
-	return rand()%(20-1)+1;
+int contarCad (char *arch, char *pala){
+	int contador = 0;
+	FILE *f;
+	char palabra[16];
+	char caracter;
+	
+	f = fopen(arch, "r");
+    if (f == NULL) {
+        printf("No se pudo abrir el archivo %s\n", arch);
+        exit(EXIT_FAILURE);
+    }
+	if(pala == " "){
+		while (feof(f) == 0){
+			caracter = fgetc(f);
+			if(caracter == ' ') contador++;
+		}
+	}else{
+		while (!feof(f)) {
+	        fscanf(f, "%s", palabra);
+	        if (strcmp(palabra, pala) == 0)
+	            contador++;
+	    }
+	}
+	fclose(f);
+	return contador;
 }
 
 typedef struct conteo_data { //Estructura para pasar parametros a padres e hijos
@@ -24,10 +44,10 @@ void *hijo(void *param){ // Funcion hijo que cuenta una palabra de un archivo
  	conteo *datos = (conteo *) param; //Define estructura "datos" recibida del padre
 
 	int *result = (int *)malloc(sizeof(int)); // Declara variable result y la prepara para ser enviada por pthread_exit()
-	*result = contar(); // llena result aleatoriamente
 
 	hijo = datos->id_hijo;	padre = datos->id_padre; // Obtiene datos del padre a traves de la estructura "Datos"
 	arch_actual = datos->archivo; query = datos->busqueda;
+	*result = contarCad(arch_actual,query); // llena result aleatoriamente
 
 	printf("Padre [%d]: Hilo #%d: \t Result: %d \t[%s:%s]\n", padre,hijo,*result,arch_actual,query); //Imprime datos
 	pthread_exit(result); //Envia cuantas veces aparece "query" en el "arch_actual"
@@ -77,7 +97,6 @@ int main(int argc, char *argv[]){
 	}
 
 	int i,k;
-
 	void *ret_array; //Declara arreglo de retorno
 	int *sum_array; //Arreglo intermedio de suma
 	int result_array[5] = {0,0,0,0,0}; //Arreglo final de suma
