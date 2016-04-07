@@ -10,21 +10,22 @@ int LONGITUD_MAX = 255;
 
 int enviar(int sockfd, struct sockaddr_in cli_addr, int id){
 	FILE *archivo;
+	unsigned char my_id;
 	unsigned char buffer[LONGITUD_MAX + 1];
 	int num, n = 0;
 	switch(id){
-		case 0: archivo = fopen("p1.pdf", "rb"); break;
-		case 1: archivo = fopen("img1.jpg", "rb"); break;
-		case 2: archivo = fopen("img5.png", "rb"); break;
-		case 3: archivo = fopen("Stromae-Papaoutai.mp3", "rb"); break;
-		case 4: archivo = fopen("JusticeLeague#30.cbr", "rb"); break;
+		case 0: archivo = fopen("img5.png", "rb"); my_id = '0'; break;
+		case 1: archivo = fopen("img1.jpg", "rb"); my_id = '1'; break;
+		case 2: archivo = fopen("p1.pdf", "rb"); my_id = '2'; break;
+		case 3: archivo = fopen("Stromae-Papaoutai.mp3", "rb"); my_id = '3'; break;
+		case 4: archivo = fopen("JusticeLeague#30.cbr", "rb"); my_id = '4'; break;
 	}
 	if (archivo == NULL){
 		printf ( "Error en la apertura. Es posible que el fichero no exista \n ");
 		fclose (archivo);
 		return 0;
 	}
-
+	sendto(sockfd,&my_id,1,0,(struct sockaddr *)&cli_addr, sizeof(cli_addr));
 	while(!feof(archivo)){
 		n = n+1;
 		bzero(buffer,LONGITUD_MAX +1);
@@ -57,6 +58,7 @@ int main(int argc, char *argv[]){
     cli_addr.sin_family = AF_INET;
     cli_addr.sin_addr.s_addr = INADDR_ANY;
     cli_addr.sin_port = htons(atoi(argv[1]));
+    
 	while (1){
 		if(i == 5) i = 0;
 		bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
