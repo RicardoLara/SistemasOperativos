@@ -8,6 +8,9 @@
 #include <arpa/inet.h>
 
 int LONGITUD_MAX = 255;
+int extension;
+char carpeta[10];
+char comando[255];
 
 int recibir(int socket, char *buffer, struct sockaddr_in cli_addr){
     FILE *archivo;
@@ -15,7 +18,24 @@ int recibir(int socket, char *buffer, struct sockaddr_in cli_addr){
     unsigned char buffer2[LONGITUD_MAX +1];
     bzero(buffer,LONGITUD_MAX +1);
     bzero(buffer2,LONGITUD_MAX +1);
-    archivo = fopen("copia.pdf", "wb");
+    
+    int uno = recvfrom(socket,buffer,1,0,(struct sockaddr *)&cli_addr,&tam);
+    if(uno == 1){
+    	extension = atoi(buffer);
+    	switch(extension){
+    		case 0: archivo = fopen("copia.png", "wb"); break;
+    		case 1: archivo = fopen("copia.jpg", "wb"); break;
+    		case 2: archivo = fopen("copia.pdf", "wb"); break;
+    		case 3: archivo = fopen("copia.mp3", "wb"); break;
+    		case 4: archivo = fopen("copia.cbr", "wb"); break;
+    	}
+    	sprintf(carpeta,"cliente%s",buffer);
+    	sprintf(comando,"mkdir -p %s",carpeta); 
+    	system(comando);
+    	printf("Fue creada la carpeta %s\n",carpeta);
+    }
+    else{ printf("Error al recibir extension\n"); return 0; }
+
     if (archivo == NULL){
         printf ( "Error en la apertura. Es posible que el fichero no exista \n ");
         fclose (archivo);
@@ -25,7 +45,7 @@ int recibir(int socket, char *buffer, struct sockaddr_in cli_addr){
         n=n+1;
         bzero(buffer,LONGITUD_MAX +1);
         int k = recvfrom(socket,buffer,LONGITUD_MAX + 1,0,(struct sockaddr *)&cli_addr,&tam);
-        printf("%d --- AQUI TERMINA EL %d\n", buffer, n);
+        printf("%s --- AQUI TERMINA EL %d\n", buffer, n);
         if (strncmp(buffer, "Ya quedo", 7) != 0){
                 if (fwrite(buffer, 1, k, archivo) == -1)
                 return 0;
@@ -38,6 +58,22 @@ int recibir(int socket, char *buffer, struct sockaddr_in cli_addr){
         return 0;
     }
     return 0;
+}
+
+void mover(){
+	char aux[255];
+	strcpy(aux,""); strcpy(comando,"");
+	switch(extension){
+		case 0: sprintf(aux, "copia.%s", "png"); break;
+		case 1: sprintf(aux, "copia.%s", "jpg"); break;
+		case 2: sprintf(aux, "copia.%s", "pdf"); break;
+		case 3: sprintf(aux, "copia.%s", "mp3"); break;
+		case 4: sprintf(aux, "copia.%s", "cbr"); break;
+	}
+	sprintf(comando, "cp %s", aux);
+	sprintf(comando, "%s %s",comando, carpeta); system(comando);
+	strcpy(comando,"");
+	sprintf(comando,"rm %s",aux); system(comando);
 }
 
 int main(int argc, char *argv[]){
@@ -65,8 +101,10 @@ int main(int argc, char *argv[]){
 	int tam = sizeof(cli_addr);
     sendto(sockfd,"I got your message",18,0,(struct sockaddr *)&cli_addr, sizeof(cli_addr));
     recibir(sockfd, buffer, cli_addr);
-    //recvfrom(sockfd,buffer,256,0,(struct sockaddr *)&cli_addr,&tam);
     printf("Ya \n");
+    //Verificacion de Ruta
+    //system("pwd"); system("ls");
+    mover();
     close(sockfd);
     return 0;
 }
