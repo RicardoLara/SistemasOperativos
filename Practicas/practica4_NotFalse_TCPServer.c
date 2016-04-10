@@ -1,46 +1,25 @@
-/* A simple server in the internet domain using TCP
-   The port number is passed as an argument */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
 
-void error(const char *msg)
-{
+void error(const char *msg){
     perror(msg);
     exit(1);
 }
 
 void escribir(int ds){
-
-        char buf[100];
-    char c = '\n';
-    char *p_buf;
-    int k, len;  
-        gets(buf);
-
-        len = strlen(buf);
-        p_buf = buf;
-
-        while (len > 0)
-        {
-            k = send(ds, p_buf, len, 0);      
-            if (k == -1)
-            {
-                printf("cannot write to server!\n");
-                break;
-            }
-
-            p_buf += k;
-            len -= k;
-        }
-
-        k = send(ds, &c, 1, 0);
-        if (k == -1)  printf("cannot write to server!\n");
+	char buffer[256];
+	printf("Server: ");
+	strcpy(buffer,"");
+	gets(buffer);
+	//printf("Tengo %d caracteres.\n",strlen(buffer));
+	send(ds,buffer,strlen(buffer),0);
 }
 
 void * aceptar(void * fd){
@@ -51,7 +30,7 @@ void * aceptar(void * fd){
         bzero(buffer,256);
         n = read(newsockfd,buffer,255);
         if (n < 0) error("ERROR read");
-        printf("Mensaje recibido: %s\n",buffer);
+        printf("Cliente: %s",buffer);
         escribir(newsockfd);
     }
     printf("Saliendo\n");
@@ -71,8 +50,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-       error("ERROR socket");
+    if (sockfd < 0) error("ERROR socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
 
     portno = atoi(argv[1]);
