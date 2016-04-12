@@ -8,37 +8,55 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
+int i = 0;
+
 void error(const char *msg){
     perror(msg);
     exit(1);
 }
 
-void escribir(int ds){
-	char buffer[256];
-	printf("Server: ");
-	strcpy(buffer,"");
-	gets(buffer);
-	//printf("Tengo %d caracteres.\n",strlen(buffer));
-	send(ds,buffer,strlen(buffer),0);
-}
-
 void * aceptar(void * fd){
-    int n, newsockfd = (int*)fd;
-    char buffer[256];
+    FILE *archivo;
+    unsigned char my_id;
+    int newsockfd = (int*)fd;
+    unsigned char buffer[256];
+    int num, n = 0;
     bzero(buffer,256);
-    while(strncmp(buffer,"exit",4) != 0) { 
+    printf("I: %d\n",i);
+    switch(i){
+        case 1: archivo = fopen("img5.png", "rb"); my_id = '1'; break;
+        case 0: archivo = fopen("img1.jpg", "rb"); my_id = '0'; break;
+        case 2: archivo = fopen("p1.pdf", "rb"); my_id = '2'; break;
+        case 3: archivo = fopen("Stromae-Papaoutai.mp3", "rb"); my_id = '3'; break;
+        case 4: archivo = fopen("JusticeLeague#30.cbr", "rb"); my_id = '4'; break;
+    } i++;
+    if (archivo == NULL){
+        printf ( "Error en la apertura. Es posible que el fichero no exista \n ");
+        fclose (archivo);
+        return 0;
+    }
+    printf("Estoy enviando el archivo %c\n",my_id);
+    send(newsockfd,&my_id,1,0);
+    while(!feof(archivo)){
+        n = n+1;
         bzero(buffer,256);
-        n = read(newsockfd,buffer,255);
-        if (n < 0) error("ERROR read");
-        printf("Cliente: %s",buffer);
-        escribir(newsockfd);
+        num = fread(buffer, 1, 256, archivo);
+        send(newsockfd,buffer,num ,0);
+        printf("%s|--- AQUI TERMINA EL %d\n", buffer, n);
+    }
+    strcpy(buffer,""); strcpy(buffer,"Ya quedo");
+    printf("ESTOY MANDANDO +%s+ al wey.\n",buffer );
+    send(newsockfd,buffer,strlen(buffer),0);
+    if(fclose (archivo) != 0){
+        printf("El archivo no se pudo cerrar correctamente\n");
+        return 0;
     }
     printf("Saliendo\n");
     pthread_exit(0);
 }
 
 int main(int argc, char *argv[]) {
-    int n, sockfd, newsockfd[5], portno,i=0;
+    int n, sockfd, newsockfd[5], portno;
     pthread_t thread[5];
 
     socklen_t clilen;
@@ -61,11 +79,12 @@ int main(int argc, char *argv[]) {
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
        error("ERROR bind");
     listen(sockfd,5);
+
     while (1){
 	    newsockfd[i] = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	    if (newsockfd < 0) error("ERROR accept");
-	    printf("Soy el cliente %d\n", i+1);
-	    pthread_create (&thread[i], NULL, aceptar, (void *)newsockfd[i++]);
+	    printf("Soy el cliente %d\n", i);
+	    pthread_create (&thread[i], NULL, aceptar, (void *)newsockfd[i]);
     }
     return 0;
 }
